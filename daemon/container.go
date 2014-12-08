@@ -633,7 +633,12 @@ func (container *Container) KillSig(sig int) error {
 		return nil
 	}
 
-	return container.daemon.Kill(container, sig)
+	err := container.daemon.Kill(container, sig)
+	// if the process doesn't exist treat it as if the container isn't running.
+	if e, ok := err.(*syscall.Errno); ok && *e == syscall.ESRCH {
+		return nil
+	}
+	return err
 }
 
 func (container *Container) Pause() error {
